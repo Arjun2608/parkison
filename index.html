@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SleepSense AI | Advanced Sleep Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sleep-wave {
+            position: relative;
+            height: 100px;
+            overflow: hidden;
+        }
+        .sleep-wave::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="%23ffffff"/><path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="%23ffffff"/><path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="%23ffffff"/></svg>');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .sleep-stage {
+            transition: all 0.3s ease;
+        }
+        .sleep-stage.active {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white">
+        <div class="sleep-wave"></div>
+        <div class="container mx-auto px-6 py-12">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-moon text-3xl mr-3"></i>
+                    <h1 class="text-3xl font-bold">SleepSense AI</h1>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="hover:text-indigo-200">Home</a>
+                    <a href="#" class="hover:text-indigo-200">Features</a>
+                    <a href="#" class="hover:text-indigo-200">Research</a>
+                    <a href="#" class="hover:text-indigo-200">Contact</a>
+                </nav>
+                <button class="md:hidden text-2xl">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <div class="mt-16 md:mt-24 text-center">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">Advanced AI Sleep Detection</h2>
+                <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+                    Harnessing artificial intelligence to analyze and optimize your sleep patterns for better health and productivity.
+                </p>
+                <button id="startDetection" class="bg-white text-indigo-600 font-bold py-3 px-8 rounded-full hover:bg-indigo-100 transition duration-300 pulse">
+                    Start Sleep Analysis
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-16">
+        <!-- Real-time Detection Section -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Real-time Sleep Monitoring</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    Our AI analyzes multiple biometric signals to accurately detect your sleep stages in real-time.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <div class="flex flex-col md:flex-row items-center">
+                    <!-- Visualization -->
+                    <div class="w-full md:w-1/2 mb-8 md:mb-0 md:pr-8">
+                        <div class="relative h-64 bg-gray-100 rounded-lg overflow-hidden">
+                            <canvas id="sleepChart" class="absolute inset-0 w-full h-full"></canvas>
+                        </div>
+                        <div class="mt-4 flex justify-center space-x-4">
+                            <button id="connectDevice" class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition">
+                                <i class="fas fa-bluetooth-b mr-2"></i> Connect Device
+                            </button>
+                            <button id="simulateData" class="bg-gray-200 text-gray-800 py-2 px-6 rounded-lg hover:bg-gray-300 transition">
+                                <i class="fas fa-random mr-2"></i> Simulate Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Analysis Results -->
+                    <div class="w-full md:w-1/2">
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="sleep-stage bg-indigo-50 p-4 rounded-lg text-center border border-indigo-100" id="remStage">
+                                <i class="fas fa-brain text-3xl text-indigo-600 mb-2"></i>
+                                <h3 class="font-bold text-gray-800">REM Sleep</h3>
+                                <p class="text-gray-600 text-sm">Dreaming phase</p>
+                                <div class="mt-2 text-indigo-600 font-bold" id="remPercentage">0%</div>
+                            </div>
+                            <div class="sleep-stage bg-blue-50 p-4 rounded-lg text-center border border-blue-100" id="deepStage">
+                                <i class="fas fa-bed text-3xl text-blue-600 mb-2"></i>
+                                <h3 class="font-bold text-gray-800">Deep Sleep</h3>
+                                <p class="text-gray-600 text-sm">Restorative phase</p>
+                                <div class="mt-2 text-blue-600 font-bold" id="deepPercentage">0%</div>
+                            </div>
+                            <div class="sleep-stage bg-purple-50 p-4 rounded-lg text-center border border-purple-100" id="lightStage">
+                                <i class="fas fa-cloud text-3xl text-purple-600 mb-2"></i>
+                                <h3 class="font-bold text-gray-800">Light Sleep</h3>
+                                <p class="text-gray-600 text-sm">Transition phase</p>
+                                <div class="mt-2 text-purple-600 font-bold" id="lightPercentage">0%</div>
+                            </div>
+                            <div class="sleep-stage bg-red-50 p-4 rounded-lg text-center border border-red-100" id="awakeStage">
+                                <i class="fas fa-eye text-3xl text-red-600 mb-2"></i>
+                                <h3 class="font-bold text-gray-800">Awake</h3>
+                                <p class="text-gray-600 text-sm">Conscious state</p>
+                                <div class="mt-2 text-red-600 font-bold" id="awakePercentage">0%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-gray-700">Sleep Quality Score</span>
+                                <span class="font-bold text-indigo-600" id="sleepScore">0/100</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="sleepScoreBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Sleep Insights -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Personalized Sleep Insights</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    Our AI provides actionable recommendations based on your unique sleep patterns.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
+                    <div class="text-indigo-600 mb-4">
+                        <i class="fas fa-clock text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Optimal Bedtime</h3>
+                    <p class="text-gray-600 mb-4">Based on your circadian rhythm, we recommend going to bed at:</p>
+                    <div class="text-2xl font-bold text-indigo-600" id="optimalBedtime">10:15 PM</div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-bell text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Wake-up Window</h3>
+                    <p class="text-gray-600 mb-4">Your ideal wake-up time during your lightest sleep phase:</p>
+                    <div class="text-2xl font-bold text-blue-600" id="optimalWakeTime">6:30 AM</div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition">
+                    <div class="text-purple-600 mb-4">
+                        <i class="fas fa-chart-line text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Sleep Debt</h3>
+                    <p class="text-gray-600 mb-4">You've accumulated this much sleep debt this week:</p>
+                    <div class="text-2xl font-bold text-purple-600" id="sleepDebt">3.2 hours</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- How It Works -->
+        <section class="bg-indigo-50 rounded-xl p-8 md:p-12 mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">How SleepSense AI Works</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    Our advanced algorithms analyze multiple sleep indicators to provide accurate detection.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                        <i class="fas fa-heartbeat text-3xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Heart Rate Variability</h3>
+                    <p class="text-gray-600">Measures the time variation between heartbeats to detect sleep stages.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                        <i class="fas fa-walking text-3xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Movement Analysis</h3>
+                    <p class="text-gray-600">Tracks body movements to distinguish between sleep and wake states.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                        <i class="fas fa-lungs text-3xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-800">Breathing Patterns</h3>
+                    <p class="text-gray-600">Analyzes respiration rate and depth to identify sleep phases.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-moon mr-2"></i> SleepSense AI
+                    </h3>
+                    <p class="text-gray-400">Advanced artificial intelligence for better sleep health and wellness.</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Features</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">API</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Documentation</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Research</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 SleepSense AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize sleep chart
+        const ctx = document.getElementById('sleepChart').getContext('2d');
+        const sleepChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 60}, (_, i) => i + 1),
+                datasets: [
+                    {
+                        label: 'Brain Waves',
+                        data: Array(60).fill(0),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Heart Rate',
+                        data: Array(60).fill(0),
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simulate sleep data
+        let isSimulating = false;
+        let simulationInterval;
+        let currentStage = 'awake';
+        
+        document.getElementById('simulateData').addEventListener('click', function() {
+            if (isSimulating) {
+                clearInterval(simulationInterval);
+                this.innerHTML = '<i class="fas fa-random mr-2"></i> Simulate Data';
+                isSimulating = false;
+                return;
+            }
+            
+            this.innerHTML = '<i class="fas fa-stop mr-2"></i> Stop Simulation';
+            isSimulating = true;
+            
+            // Reset all stages
+            document.querySelectorAll('.sleep-stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+            
+            // Start simulation
+            simulationInterval = setInterval(() => {
+                // Randomly change sleep stage
+                const stages = ['rem', 'deep', 'light', 'awake'];
+                const randomIndex = Math.floor(Math.random() * stages.length);
+                currentStage = stages[randomIndex];
+                
+                // Update UI
+                updateSleepStage(currentStage);
+                
+                // Update chart data
+                updateChartData();
+                
+                // Update percentages
+                updatePercentages(currentStage);
+                
+                // Update sleep score
+                updateSleepScore(currentStage);
+                
+            }, 3000);
+        });
+        
+        function updateSleepStage(stage) {
+            // Reset all active states
+            document.querySelectorAll('.sleep-stage').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Activate current stage
+            document.getElementById(stage + 'Stage').classList.add('active');
+        }
+        
+        function updateChartData() {
+            const brainData = [];
+            const heartData = [];
+            
+            // Generate random data based on current sleep stage
+            for (let i = 0; i < 60; i++) {
+                let brainValue, heartValue;
+                
+                switch(currentStage) {
+                    case 'rem':
+                        brainValue = Math.random() * 30 + 50; // High variability
+                        heartValue = Math.random() * 10 + 60; // Moderate rate
+                        break;
+                    case 'deep':
+                        brainValue = Math.random() * 10 + 20; // Low variability
+                        heartValue = Math.random() * 5 + 50; // Low rate
+                        break;
+                    case 'light':
+                        brainValue = Math.random() * 20 + 30; // Moderate variability
+                        heartValue = Math.random() * 10 + 55; // Moderate rate
+                        break;
+                    case 'awake':
+                        brainValue = Math.random() * 40 + 30; // High variability
+                        heartValue = Math.random() * 20 + 70; // High rate
+                        break;
+                }
+                
+                brainData.push(brainValue);
+                heartData.push(heartValue);
+            }
+            
+            // Update chart
+            sleepChart.data.datasets[0].data = brainData;
+            sleepChart.data.datasets[1].data = heartData;
+            sleepChart.update();
+        }
+        
+        function updatePercentages(stage) {
+            // Set percentages based on current stage
+            let rem, deep, light, awake;
+            
+            switch(stage) {
+                case 'rem':
+                    rem = Math.floor(Math.random() * 30 + 20);
+                    deep = Math.floor(Math.random() * 10);
+                    light = Math.floor(Math.random() * 30 + 20);
+                    awake = Math.floor(Math.random() * 5);
+                    break;
+                case 'deep':
+                    rem = Math.floor(Math.random() * 10);
+                    deep = Math.floor(Math.random() * 30 + 20);
+                    light = Math.floor(Math.random() * 20 + 10);
+                    awake = Math.floor(Math.random() * 5);
+                    break;
+                case 'light':
+                    rem = Math.floor(Math.random() * 10);
+                    deep = Math.floor(Math.random() * 10);
+                    light = Math.floor(Math.random() * 50 + 30);
+                    awake = Math.floor(Math.random() * 10 + 5);
+                    break;
+                case 'awake':
+                    rem = 0;
+                    deep = 0;
+                    light = Math.floor(Math.random() * 20);
+                    awake = Math.floor(Math.random() * 80 + 20);
+                    break;
+            }
+            
+            // Normalize to 100%
+            const total = rem + deep + light + awake;
+            rem = Math.round((rem / total) * 100);
+            deep = Math.round((deep / total) * 100);
+            light = Math.round((light / total) * 100);
+            awake = 100 - rem - deep - light;
+            
+            document.getElementById('remPercentage').textContent = rem + '%';
+            document.getElementById('deepPercentage').textContent = deep + '%';
+            document.getElementById('lightPercentage').textContent = light + '%';
+            document.getElementById('awakePercentage').textContent = awake + '%';
+        }
+        
+        function updateSleepScore(stage) {
+            let score;
+            
+            switch(stage) {
+                case 'rem':
+                    score = Math.floor(Math.random() * 20 + 70);
+                    break;
+                case 'deep':
+                    score = Math.floor(Math.random() * 20 + 75);
+                    break;
+                case 'light':
+                    score = Math.floor(Math.random() * 20 + 60);
+                    break;
+                case 'awake':
+                    score = Math.floor(Math.random() * 30 + 30);
+                    break;
+            }
+            
+            document.getElementById('sleepScore').textContent = score + '/100';
+            document.getElementById('sleepScoreBar').style.width = score + '%';
+        }
+        
+        // Start detection button
+        document.getElementById('startDetection').addEventListener('click', function() {
+            alert('Sleep detection started! Connect a compatible device or use simulated data.');
+        });
+        
+        // Connect device button
+        document.getElementById('connectDevice').addEventListener('click', function() {
+            alert('Searching for compatible devices... Please enable Bluetooth on your device.');
+        });
+    </script>
+</body>
+</html>
